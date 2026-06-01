@@ -1,0 +1,5 @@
+Minimal neovim configuration
+
+
+
+## Requirements
