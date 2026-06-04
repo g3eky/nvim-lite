@@ -35,6 +35,11 @@ function M.file_search(pattern, dir)
         table.insert(qf_items, { filename = path, lnum = 1, col = 1, text = path })
       end
 
+      if #qf_items == 1 then
+        vim.cmd("edit " .. vim.fn.fnameescape(qf_items[1].filename))
+        return
+      end
+
       vim.fn.setqflist({}, "r", {
         title = 'FileSearch: "' .. pattern .. '"',
         items = qf_items,

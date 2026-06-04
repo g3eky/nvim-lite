@@ -14,6 +14,16 @@ vim.keymap.set("n", "<leader>*", function() search_string.search(vim.fn.expand("
 -- <leader>ff — prompt for a filename pattern and find with fd into quickfix
 vim.keymap.set("n", "<leader>ff", function() search_file.file_search() end, { desc = "File search into quickfix" })
 
+-- <leader>q — toggle quickfix window
+vim.keymap.set("n", "<leader>q", function()
+  local wins = vim.fn.getqflist({ winid = 0 }).winid
+  if wins ~= 0 then
+    vim.cmd("cclose")
+  else
+    vim.cmd("copen")
+  end
+end, { desc = "Toggle quickfix" })
+
 local function strip_quotes(s)
   return s:match('^"(.*)"$') or s:match("^'(.*)'$") or s
 end

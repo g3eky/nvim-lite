@@ -32,6 +32,13 @@ function M.search(query, dir)
 
       local qf_items = vim.fn.getqflist({ lines = results, efm = "%f:%l:%c:%m" }).items
 
+      if #qf_items == 1 then
+        local item = qf_items[1]
+        vim.cmd("edit " .. vim.fn.fnameescape(item.filename))
+        vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
+        return
+      end
+
       vim.fn.setqflist({}, "r", {
         title = 'Search: "' .. query .. '"',
         items = qf_items,
