@@ -1,19 +1,18 @@
 local M = {}
 
--- Run ripgrep for `query` rooted at `dir` (defaults to cwd) and populate quickfix.
-function M.rg_search(query, dir)
+function M.file_search(pattern, dir)
   dir = dir or vim.fn.getcwd()
 
-  if not query or query == "" then
-    vim.ui.input({ prompt = "rg search: " }, function(input)
+  if not pattern or pattern == "" then
+    vim.ui.input({ prompt = "File search: " }, function(input)
       if input and input ~= "" then
-        M.rg_search(input, dir)
+        M.file_search(input, dir)
       end
     end)
     return
   end
 
-  local cmd = { "rg", "--vimgrep", "--smart-case", "--", query, dir }
+  local cmd = { "fd", "--type", "f", "--", pattern, dir }
   local results = {}
 
   vim.fn.jobstart(cmd, {
@@ -27,14 +26,17 @@ function M.rg_search(query, dir)
     end,
     on_exit = function(_, code)
       if code ~= 0 and #results == 0 then
-        vim.notify('rg: no matches for "' .. query .. '"', vim.log.levels.INFO)
+        vim.notify('No files matching "' .. pattern .. '"', vim.log.levels.INFO)
         return
       end
 
-      local qf_items = vim.fn.getqflist({ lines = results, efm = "%f:%l:%c:%m" }).items
+      local qf_items = {}
+      for _, path in ipairs(results) do
+        table.insert(qf_items, { filename = path, lnum = 1, col = 1, text = path })
+      end
 
       vim.fn.setqflist({}, "r", {
-        title = 'rg: "' .. query .. '"',
+        title = 'FileSearch: "' .. pattern .. '"',
         items = qf_items,
       })
 
