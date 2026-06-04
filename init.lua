@@ -5,11 +5,9 @@ require("settings")
 -- setup any vanilla neovim options
 require("configs.core")
 
+-- custom functions and their keymaps
+require("configs.custom")
+
 -- load the plugin manager, lazy
 require("plugin-manager")
 
--- setup any lsp settings
---require("configs.lsp")
-
--- setup any dap settings
---require("configs.dap")
