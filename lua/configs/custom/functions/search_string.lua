@@ -1,7 +1,7 @@
 local M = {}
 
 if vim.fn.executable("rg") == 0 then
-  vim.notify("rg not found — :Search will not work", vim.log.levels.WARN)
+  vim.notify("rg not found — :Grep will not work", vim.log.levels.WARN)
 end
 
 -- reuse DiagnosticWarn colour for match highlights so it follows the colorscheme
@@ -59,7 +59,7 @@ function M.search(query, dir, glob)
       end
 
       vim.fn.setqflist({}, "r", {
-        title = 'Search: "' .. query .. '"',
+        title = 'Grep: "' .. query .. '"',
         items = qf_items,
       })
 

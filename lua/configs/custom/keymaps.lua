@@ -7,8 +7,16 @@ vim.keymap.set("n", "<leader>ff", function() search_file.file_search() end, { de
 -- <leader>fs — prompt for a string and search into quickfix
 vim.keymap.set("n", "<leader>fs", function() search_string.search() end, { desc = "Search into quickfix" })
 
--- <leader>* — search the word under the cursor (mnemonic: like *)
+-- <leader>* — search word under cursor (normal) or visual selection (visual)
 vim.keymap.set("n", "<leader>*", function() search_string.search(vim.fn.expand("<cword>")) end, { desc = "Search word under cursor" })
+vim.keymap.set("v", "<leader>*", function()
+  local saved = vim.fn.getreg('"')
+  local savedtype = vim.fn.getregtype('"')
+  vim.cmd("noautocmd normal! y")
+  local text = vim.fn.getreg('"')
+  vim.fn.setreg('"', saved, savedtype)
+  search_string.search(text)
+end, { desc = "Search visual selection" })
 
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "qf",
@@ -35,7 +43,7 @@ local function strip_quotes(s)
   return s:match('^"(.*)"$') or s:match("^'(.*)'$") or s
 end
 
-vim.api.nvim_create_user_command("Search", function(opts)
+vim.api.nvim_create_user_command("Grep", function(opts)
   local fargs = opts.fargs
   local glob
   -- last arg is always the glob when multiple args are given; quote the query for spaces
