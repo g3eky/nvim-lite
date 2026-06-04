@@ -93,7 +93,7 @@ return {
     require("lualine").setup({
       options = {
         icons_enabled = true,
-        theme = "catppuccin",
+        theme = "catppuccin-macchiato",
         component_separators = icons.component_separators,
         section_separators = icons.section_separators,
         disabled_filetypes = {
@@ -184,6 +184,16 @@ return {
       inactive_winbar = {
       },
       extensions = {}
+    })
+
+    -- lualine bleeds into NvimTree's statusline; override it after lualine's handlers fire
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = "NvimTree",
+      callback = function()
+        vim.schedule(function()
+          vim.opt_local.statusline = " "
+        end)
+      end,
     })
 
     -- disable showing mode the vanilla way as mode is being show on lualine
