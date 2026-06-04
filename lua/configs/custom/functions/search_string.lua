@@ -45,7 +45,6 @@ function M.search(query, dir)
       })
 
       vim.cmd("copen")
-      vim.cmd("cfirst")
     end,
   })
 end

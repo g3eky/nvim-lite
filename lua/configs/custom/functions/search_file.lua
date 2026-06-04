@@ -32,11 +32,11 @@ function M.file_search(pattern, dir)
 
       local qf_items = {}
       for _, path in ipairs(results) do
-        table.insert(qf_items, { filename = path, lnum = 1, col = 1, text = path })
+        table.insert(qf_items, { filename = path })
       end
 
       if #qf_items == 1 then
-        vim.cmd("edit " .. vim.fn.fnameescape(qf_items[1].filename))
+        vim.cmd("edit " .. vim.fn.fnameescape(results[1]))
         return
       end
 
@@ -46,7 +46,6 @@ function M.file_search(pattern, dir)
       })
 
       vim.cmd("copen")
-      vim.cmd("cfirst")
     end,
   })
 end
