@@ -28,6 +28,11 @@ function M.setup()
         vim.cmd(vim.fn.line(".") .. "cc")
         vim.fn.win_gotoid(qf_win)
       end, { buffer = true })
+
+      vim.keymap.set("n", "<S-CR>", function()
+        vim.cmd(vim.fn.line(".") .. "cc")
+        vim.cmd("cclose")
+      end, { buffer = true })
     end,
   })
 end

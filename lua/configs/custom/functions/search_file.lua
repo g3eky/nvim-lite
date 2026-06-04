@@ -46,6 +46,23 @@ function M.file_search(pattern, dir)
       })
 
       vim.cmd("copen")
+      vim.schedule(function()
+        local qf_winid = vim.fn.getqflist({ winid = 0 }).winid
+        if qf_winid == 0 then return end
+        local qf_bufnr = vim.api.nvim_win_get_buf(qf_winid)
+        local ns = vim.api.nvim_create_namespace("search_file_hl")
+        vim.api.nvim_buf_clear_namespace(qf_bufnr, ns, 0, -1)
+        local lp = pattern:lower()
+        for i, line in ipairs(vim.api.nvim_buf_get_lines(qf_bufnr, 0, -1, false)) do
+          local pos = 1
+          while true do
+            local s, e = line:lower():find(lp, pos, true)
+            if not s then break end
+            vim.api.nvim_buf_add_highlight(qf_bufnr, ns, "QfSearchMatch", i - 1, s - 1, e)
+            pos = e + 1
+          end
+        end
+      end)
     end,
   })
 end
