@@ -11,19 +11,23 @@ end
 set_hl()
 vim.api.nvim_create_autocmd("ColorScheme", { callback = set_hl })
 
-function M.search(query, dir)
+function M.search(query, dir, glob)
   dir = dir or vim.fn.getcwd()
 
   if not query or query == "" then
     vim.ui.input({ prompt = "Search: " }, function(input)
       if input and input ~= "" then
-        M.search(input, dir)
+        M.search(input, dir, glob)
       end
     end)
     return
   end
 
-  local cmd = { "rg", "--vimgrep", "--smart-case", "--", query, dir }
+  local cmd = { "rg", "--smart-case", "--line-number", "--no-heading", "--with-filename" }
+  if glob then
+    vim.list_extend(cmd, { "--glob", glob })
+  end
+  vim.list_extend(cmd, { "--", query, dir })
   local results = {}
 
   vim.fn.jobstart(cmd, {
@@ -41,12 +45,12 @@ function M.search(query, dir)
         return
       end
 
-      local qf_items = vim.fn.getqflist({ lines = results, efm = "%f:%l:%c:%m" }).items
+      local qf_items = vim.fn.getqflist({ lines = results, efm = "%f:%l:%m" }).items
 
       if #qf_items == 1 then
         local item = qf_items[1]
         vim.cmd("edit " .. vim.fn.fnameescape(item.filename))
-        vim.api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
+        vim.api.nvim_win_set_cursor(0, { item.lnum, 0 })
         return
       end
 
