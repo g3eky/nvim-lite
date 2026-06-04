@@ -29,4 +29,4 @@ local function strip_quotes(s)
 end
 
 vim.api.nvim_create_user_command("Search", function(opts) search_string.search(strip_quotes(opts.args)) end, { nargs = "*", desc = "Search into quickfix" })
-vim.api.nvim_create_user_command("FileSearch", function(opts) search_file.file_search(strip_quotes(opts.args)) end, { nargs = "*", desc = "Find files into quickfix" })
+vim.api.nvim_create_user_command("Find", function(opts) search_file.file_search(strip_quotes(opts.args)) end, { nargs = "*", desc = "Find files into quickfix" })

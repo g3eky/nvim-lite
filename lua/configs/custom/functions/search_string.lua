@@ -1,5 +1,9 @@
 local M = {}
 
+if vim.fn.executable("rg") == 0 then
+  vim.notify("rg not found — :Search will not work", vim.log.levels.WARN)
+end
+
 local function set_hl()
   local warn = vim.api.nvim_get_hl(0, { name = "DiagnosticWarn", link = false })
   vim.api.nvim_set_hl(0, "QfSearchMatch", { fg = warn.fg, bold = true })

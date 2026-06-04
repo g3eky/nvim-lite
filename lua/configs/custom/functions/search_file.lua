@@ -1,5 +1,9 @@
 local M = {}
 
+if vim.fn.executable("fd") == 0 then
+  vim.notify("fd not found — :Find will not work", vim.log.levels.WARN)
+end
+
 function M.file_search(pattern, dir)
   dir = dir or vim.fn.getcwd()
 
