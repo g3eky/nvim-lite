@@ -19,6 +19,17 @@ function M.setup()
   end
 
   vim.o.quickfixtextfunc = "v:lua._qf_text_func"
+
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = "qf",
+    callback = function()
+      vim.keymap.set("n", "<CR>", function()
+        local qf_win = vim.fn.win_getid()
+        vim.cmd(vim.fn.line(".") .. "cc")
+        vim.fn.win_gotoid(qf_win)
+      end, { buffer = true })
+    end,
+  })
 end
 
 return M
