@@ -8,6 +8,7 @@ if vim.fn.executable("fzf") == 0 then
   vim.notify("fzf not found — :Find will not work", vim.log.levels.WARN)
 end
 
+-- fuzzy file search using fd + fzf; prompts if pattern is omitted
 function M.file_search(pattern, dir)
   dir = dir or vim.fn.getcwd()
 
@@ -20,6 +21,7 @@ function M.file_search(pattern, dir)
     return
   end
 
+  -- fd lists all files, fzf filters them with fuzzy matching
   local shell_cmd = "fd --type f . " .. vim.fn.shellescape(dir) .. " | fzf --filter " .. vim.fn.shellescape(pattern)
   local cmd = { "sh", "-c", shell_cmd }
   local results = {}
@@ -44,6 +46,7 @@ function M.file_search(pattern, dir)
         table.insert(qf_items, { filename = path })
       end
 
+      -- single match: open directly instead of going through quickfix
       if #qf_items == 1 then
         vim.cmd("edit " .. vim.fn.fnameescape(results[1]))
         return
@@ -55,6 +58,7 @@ function M.file_search(pattern, dir)
       })
 
       vim.cmd("copen")
+      -- highlight matched characters in the quickfix buffer using fzf's greedy left-to-right algorithm
       vim.schedule(function()
         local qf_winid = vim.fn.getqflist({ winid = 0 }).winid
         if qf_winid == 0 then return end
