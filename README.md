@@ -27,10 +27,15 @@ Search file contents. Results open in the quickfix list with matches highlighted
 When two arguments are given, the last is treated as a file glob. Use quotes for multi-word queries.
 
 ```
-:Search TODO
-:Search foo *.lua
-:Search "foo bar" *.c
+:Search TODO                      " search all files
+:Search foo *.lua                 " only Lua files
+:Search "foo bar" *.c             " multi-word query, only C files
+:Search error *.{js,ts}           " multiple extensions
+:Search fixme !*.min.js           " exclude minified files (! negates the glob)
+:Search TODO src/**/*.py          " limit to a subdirectory
 ```
+
+Search is smart-case: all-lowercase queries are case-insensitive, mixed-case is exact. The query is passed directly to ripgrep as a [regex](https://docs.rs/regex/latest/regex/#syntax).
 
 Keymaps: `<leader>fs` ([f]ind [s]tring) to prompt, `<leader>*` to search word under cursor.
 

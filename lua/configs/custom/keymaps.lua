@@ -1,7 +1,6 @@
 -- keymaps for custom functions
 local search_string = require("configs.custom.functions.search_string")
 local search_file = require("configs.custom.functions.search_file")
-
 -- <leader>ff — prompt for a filename pattern and find with fd into quickfix
 vim.keymap.set("n", "<leader>ff", function() search_file.file_search() end, { desc = "File search into quickfix" })
 
