@@ -6,10 +6,11 @@ local quickfix = require("configs.custom.functions.quickfix")
 vim.keymap.set("n", "<leader>ff", function() vim.api.nvim_feedkeys(":Find ", "n", false) end, { desc = "Find files into quickfix" })
 vim.keymap.set("n", "<leader>fs", function() vim.api.nvim_feedkeys(":Grep ", "n", false) end, { desc = "Search into quickfix" })
 
--- <leader>* — prefill :Grep with the word under cursor / visual selection on the
--- cmdline (no <CR>) so it can be edited or extended before running
+-- <leader>* — grep immediately: in normal mode the word under cursor with word
+-- boundaries (like vim's *), in visual mode the selection quoted (one literal phrase)
+local cr = vim.api.nvim_replace_termcodes("<CR>", true, false, true)
 vim.keymap.set("n", "<leader>*", function()
-  vim.api.nvim_feedkeys(":Grep " .. vim.fn.expand("<cword>"), "n", false)
+  vim.api.nvim_feedkeys(":Grep \\b" .. vim.fn.expand("<cword>") .. "\\b" .. cr, "n", false)
 end, { desc = "Search word under cursor" })
 vim.keymap.set("v", "<leader>*", function()
   local saved = vim.fn.getreg('"')
@@ -17,7 +18,7 @@ vim.keymap.set("v", "<leader>*", function()
   vim.cmd("noautocmd normal! y")
   local text = vim.fn.getreg('"')
   vim.fn.setreg('"', saved, savedtype)
-  vim.api.nvim_feedkeys(":Grep " .. text, "n", false)
+  vim.api.nvim_feedkeys(':Grep "' .. text .. '"' .. cr, "n", false)
 end, { desc = "Search visual selection" })
 
 vim.api.nvim_create_autocmd("FileType", {
@@ -43,13 +44,19 @@ local function strip_quotes(s)
 end
 
 vim.api.nvim_create_user_command("Grep", function(opts)
-  local fargs = opts.fargs
-  local glob
-  -- last arg is always the glob when multiple args are given; quote the query for spaces
-  if #fargs > 1 then
-    glob = table.remove(fargs)
+  local query, glob
+  -- a quoted query is taken as-is (may contain spaces); an optional glob may follow it.
+  -- otherwise the last of multiple bare args is the glob, the rest joined is the query.
+  local quoted = opts.args:match('^%s*"(.-)"') or opts.args:match("^%s*'(.-)'")
+  if quoted then
+    query = quoted
+    local rest = opts.args:match('^%s*".-"%s*(.*)$') or opts.args:match("^%s*'.-'%s*(.*)$")
+    if rest and rest ~= "" then glob = rest end
+  else
+    local fargs = opts.fargs
+    if #fargs > 1 then glob = table.remove(fargs) end
+    query = #fargs > 0 and table.concat(fargs, " ") or nil
   end
-  local query = #fargs > 0 and table.concat(fargs, " ") or nil
   search_string.search(query, nil, glob)
 end, { nargs = "*", desc = "Search into quickfix" })
 
