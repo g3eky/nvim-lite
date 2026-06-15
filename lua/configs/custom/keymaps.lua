@@ -6,11 +6,15 @@ local quickfix = require("configs.custom.functions.quickfix")
 vim.keymap.set("n", "<leader>ff", function() vim.api.nvim_feedkeys(":Find ", "n", false) end, { desc = "Find files into quickfix" })
 vim.keymap.set("n", "<leader>fs", function() vim.api.nvim_feedkeys(":Grep ", "n", false) end, { desc = "Search into quickfix" })
 
--- <leader>* — grep immediately: in normal mode the word under cursor with word
--- boundaries (like vim's *), in visual mode the selection quoted (one literal phrase)
-local cr = vim.api.nvim_replace_termcodes("<CR>", true, false, true)
+-- <leader>* — fill the cmdline and run it (the <CR> auto-presses enter): in normal
+-- mode the word under cursor with word boundaries (like vim's *), in visual mode
+-- the selection quoted (one literal phrase)
+local function feed_cmd(cmd)
+  local keys = vim.api.nvim_replace_termcodes(cmd .. "<CR>", true, false, true)
+  vim.api.nvim_feedkeys(keys, "nt", false)
+end
 vim.keymap.set("n", "<leader>*", function()
-  vim.api.nvim_feedkeys(":Grep \\b" .. vim.fn.expand("<cword>") .. "\\b" .. cr, "n", false)
+  feed_cmd(":Grep \\b" .. vim.fn.expand("<cword>") .. "\\b")
 end, { desc = "Search word under cursor" })
 vim.keymap.set("v", "<leader>*", function()
   local saved = vim.fn.getreg('"')
@@ -18,7 +22,7 @@ vim.keymap.set("v", "<leader>*", function()
   vim.cmd("noautocmd normal! y")
   local text = vim.fn.getreg('"')
   vim.fn.setreg('"', saved, savedtype)
-  vim.api.nvim_feedkeys(':Grep "' .. text .. '"' .. cr, "n", false)
+  feed_cmd(':Grep "' .. text .. '"')
 end, { desc = "Search visual selection" })
 
 vim.api.nvim_create_autocmd("FileType", {
