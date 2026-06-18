@@ -9,6 +9,13 @@ end
 -- line N always sits beside line N — without ever touching the source buffer.
 local state = { blame_win = nil, src_win = nil }
 
+local ns = vim.api.nvim_create_namespace("gitblame")
+
+-- Existing semantic groups, so colours track the active colorscheme (catppuccin):
+-- "Function" is blue, "Constant" is peach/orange. We alternate between the two every
+-- time the commit changes from the line above, so adjacent commit blocks always differ.
+local PALETTE = { "Function", "Constant" }
+
 local function close()
   if state.blame_win and vim.api.nvim_win_is_valid(state.blame_win) then
     vim.api.nvim_win_close(state.blame_win, true)
@@ -26,7 +33,7 @@ end
 -- is self-contained: a 40-hex header line, then author/time fields, then the source
 -- line (tab-prefixed). Blocks arrive in final-line order, so we just append.
 local function parse(out)
-  local lines, hash, author, time = {}, nil, nil, nil
+  local entries, hash, author, time = {}, nil, nil, nil
   for _, l in ipairs(out) do
     local h = l:match("^(%x+) %d+ %d+")
     if h then
@@ -38,14 +45,46 @@ local function parse(out)
     elseif l:sub(1, 1) == "\t" then
       -- content line closes the block; emit the gutter entry for this source line
       if hash:match("^0+$") then
-        lines[#lines + 1] = string.format("%-8s %-10s %s", "0000000", "", "Not Committed Yet")
+        entries[#entries + 1] = { hash = "0000000", date = "", author = "Not Committed Yet", uncommitted = true }
       else
         local date = time and os.date("%Y-%m-%d", time) or ""
-        lines[#lines + 1] = string.format("%-8s %-10s %s", hash:sub(1, 7), date, author or "")
+        entries[#entries + 1] = { hash = hash:sub(1, 7), date = date, author = author or "" }
       end
     end
   end
-  return lines
+  return entries
+end
+
+-- Turn parsed entries into gutter text plus the highlight spans for each line.
+-- Layout per line: "<hash:8> <date:10> <author>". We compute span offsets from the
+-- field widths so the highlights stay aligned even if a colorscheme changes the font.
+local function render(entries)
+  local lines, spans = {}, {}
+  local prev_hash, idx = nil, 0
+  for i, e in ipairs(entries) do
+    local hash_field = string.format("%-8s", e.hash)
+    local date_field = string.format("%-10s", e.date)
+    local text = hash_field .. " " .. date_field .. " " .. e.author
+    lines[i] = text
+
+    local row = i - 1
+    if e.uncommitted then
+      spans[#spans + 1] = { row, 0, #text, "DiagnosticWarn" }
+    else
+      -- flip colour only when the commit differs from the line above
+      if e.hash ~= prev_hash then
+        idx = idx + 1
+      end
+      prev_hash = e.hash
+      local hl = PALETTE[(idx % #PALETTE) + 1]
+      local date_start = #hash_field + 1
+      local author_start = date_start + #date_field + 1
+      spans[#spans + 1] = { row, 0, #e.hash, hl }                         -- hash
+      spans[#spans + 1] = { row, date_start, date_start + #e.date, "Comment" } -- date dimmed
+      spans[#spans + 1] = { row, author_start, #text, hl }                -- author matches its commit
+    end
+  end
+  return lines, spans
 end
 
 function M.toggle()
@@ -73,7 +112,7 @@ function M.toggle()
     return
   end
 
-  local lines = parse(out)
+  local lines, spans = render(parse(out))
   local width = 0
   for _, l in ipairs(lines) do
     width = math.max(width, #l)
@@ -86,6 +125,9 @@ function M.toggle()
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_win_set_buf(blame_win, buf)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  for _, s in ipairs(spans) do
+    vim.api.nvim_buf_set_extmark(buf, ns, s[1], s[2], { end_col = s[3], hl_group = s[4] })
+  end
 
   vim.bo[buf].buftype = "nofile"
   vim.bo[buf].bufhidden = "wipe"

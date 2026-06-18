@@ -2,7 +2,7 @@
 local search_string = require("configs.custom.functions.search_string")
 local search_file = require("configs.custom.functions.search_file")
 local quickfix = require("configs.custom.functions.quickfix")
-local git_blame = require("configs.custom.functions.git_blame")
+local git_blame = require("configs.custom.functions.git.blame")
 -- <leader>ff / <leader>fs — open cmdline pre-filled so the query can be edited before running
 vim.keymap.set("n", "<leader>ff", function() vim.api.nvim_feedkeys(":Find ", "n", false) end, { desc = "Find files into quickfix" })
 vim.keymap.set("n", "<leader>fs", function() vim.api.nvim_feedkeys(":Grep ", "n", false) end, { desc = "Search into quickfix" })
@@ -68,4 +68,6 @@ end, { nargs = "*", desc = "Search into quickfix" })
 vim.api.nvim_create_user_command("Find", function(opts) search_file.file_search_exact(strip_quotes(opts.args)) end, { nargs = "*", desc = "Find files (exact) into quickfix" })
 vim.api.nvim_create_user_command("FindFuzzy", function(opts) search_file.file_search(strip_quotes(opts.args)) end, { nargs = "*", desc = "Find files (fuzzy) into quickfix" })
 
-vim.api.nvim_create_user_command("Blame", git_blame.toggle, { desc = "Toggle git blame gutter" })
+vim.api.nvim_create_user_command("GitBlame", git_blame.toggle, { desc = "Toggle git blame gutter" })
+-- <leader>tb — giT Blame
+vim.keymap.set("n", "<leader>tb", git_blame.toggle, { desc = "Toggle git blame gutter" })
