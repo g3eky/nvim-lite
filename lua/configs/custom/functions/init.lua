@@ -2,4 +2,5 @@
 require("configs.custom.functions.log")
 require("configs.custom.functions.search_string")
 require("configs.custom.functions.search_file")
+require("configs.custom.functions.git_blame")
 require("configs.custom.functions.quickfix").setup()
