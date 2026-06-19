@@ -76,3 +76,7 @@ vim.keymap.set("n", "<leader>tb", git_blame.toggle, { desc = "Toggle git blame g
 vim.api.nvim_create_user_command("GitDiff", function(opts) git_diff.show(opts.args) end, { nargs = "*", complete = "file", desc = "Show git diff in a vsplit" })
 -- <leader>td — giT Diff (working tree)
 vim.keymap.set("n", "<leader>td", function() git_diff.show("") end, { desc = "Show git diff in a vsplit" })
+
+vim.api.nvim_create_user_command("GitDiffFull", function(opts) git_diff.show_all(opts.args) end, { nargs = "*", desc = "List all changed files into the quickfix list" })
+-- <leader>tD — giT Diff (all changed files into quickfix)
+vim.keymap.set("n", "<leader>tD", function() git_diff.show_all("") end, { desc = "List all changed files into the quickfix list" })
