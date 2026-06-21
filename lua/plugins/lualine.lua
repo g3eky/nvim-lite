@@ -97,7 +97,7 @@ return {
         component_separators = icons.component_separators,
         section_separators = icons.section_separators,
         disabled_filetypes = {
-          statusline = {"NvimTree", "Outline", "fugitiveblame"},
+          statusline = {"NvimTree", "Outline", "fugitiveblame", "gitblame"},
         },
         ignore_focus = {},
         always_divide_middle = true,

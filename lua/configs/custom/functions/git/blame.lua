@@ -7,7 +7,7 @@ end
 -- One blame gutter at a time. We keep the blame text in a scratch window pinned to
 -- the left of the source window and scrollbind/cursorbind the two so the blame for
 -- line N always sits beside line N — without ever touching the source buffer.
-local state = { blame_win = nil, src_win = nil }
+local state = { blame_win = nil, src_win = nil, group = nil }
 
 local ns = vim.api.nvim_create_namespace("gitblame")
 
@@ -18,7 +18,14 @@ local PALETTE = { "Function", "Constant" }
 
 local function close()
   if state.blame_win and vim.api.nvim_win_is_valid(state.blame_win) then
-    vim.api.nvim_win_close(state.blame_win, true)
+    -- normally just close the gutter; but if it is the last window (the source file
+    -- was quit out from under it), closing isn't allowed — quit it instead, which
+    -- exits nvim: the natural end of quitting the file the blame was attached to
+    local ok = pcall(vim.api.nvim_win_close, state.blame_win, true)
+    if not ok and vim.api.nvim_win_is_valid(state.blame_win) then
+      vim.api.nvim_set_current_win(state.blame_win)
+      pcall(vim.cmd, "quit")
+    end
   end
   if state.src_win and vim.api.nvim_win_is_valid(state.src_win) then
     vim.api.nvim_win_call(state.src_win, function()
@@ -26,7 +33,10 @@ local function close()
       vim.wo.cursorbind = false
     end)
   end
-  state.blame_win, state.src_win = nil, nil
+  if state.group then
+    pcall(vim.api.nvim_del_augroup_by_id, state.group)
+  end
+  state.blame_win, state.src_win, state.group = nil, nil, nil
 end
 
 -- --line-porcelain repeats the full commit header before every line, so each block
@@ -154,12 +164,18 @@ function M.toggle()
 
   state.blame_win, state.src_win = blame_win, src_win
 
-  -- q closes the gutter; clean up scrollbind if it's closed any other way too
+  -- q closes the gutter. Closing either window any other way (:q, :close, <C-w>q) also
+  -- tears the pair down, so quitting the source file quits blame too and the gutter
+  -- never lingers. Deferred: closing a window synchronously inside WinClosed aborts an
+  -- in-flight :q (E855), so run the teardown on the next tick instead.
   vim.keymap.set("n", "q", close, { buffer = buf, nowait = true, desc = "Close blame gutter" })
+  state.group = vim.api.nvim_create_augroup("gitblame_close", { clear = true })
   vim.api.nvim_create_autocmd("WinClosed", {
-    pattern = tostring(blame_win),
-    once = true,
-    callback = close,
+    group = state.group,
+    callback = function(ev)
+      local closed = tonumber(ev.match)
+      if closed == blame_win or closed == src_win then vim.schedule(close) end
+    end,
   })
 
   -- keep the source window focused so the user can carry on editing
